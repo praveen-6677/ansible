@@ -1,37 +1,52 @@
 - name: Installing and configuring MongoDB
   hosts: mongodb
   become: yes
-  tasks:
-    - name: Import MongoDB public GPG key
-      ansible.builtin.get_url:
-        url: https://www.mongodb.org/static/pgp/server-7.0.asc
-        dest: /usr/share/keyrings/mongodb-server-7.0.gpg
-        mode: "0644"
 
-    - name: Creating a list file for MongoDB
+  tasks:
+    - name: Remove old MongoDB repository (if any)
+      ansible.builtin.file:
+        path: /etc/apt/sources.list.d/mongodb-org-4.4.list
+        state: absent
+
+    - name: Remove old GPG key (if exists)
+      ansible.builtin.file:
+        path: /usr/share/keyrings/mongodb-server-7.0.gpg
+        state: absent
+
+    - name: Import MongoDB 7.0 public key (modern way)
+      ansible.builtin.shell: |
+        curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg
+      args:
+        creates: /usr/share/keyrings/mongodb-server-7.0.gpg
+
+    - name: Add MongoDB repository for Ubuntu 22.04 (Jammy)
       ansible.builtin.copy:
         dest: /etc/apt/sources.list.d/mongodb-org-7.0.list
-        content: "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse"
+        content: "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse"
         mode: "0644"
 
-    - name: Updating the apt cache
+    - name: Update apt cache
       ansible.builtin.apt:
         update_cache: yes
+        cache_valid_time: 3600
 
-    - name: Installing MongoDB packages
+    - name: Install MongoDB
       ansible.builtin.apt:
         name: mongodb-org
         state: present
 
-    - name: Starting MongoDB service
+    - name: Enable and start MongoDB
       ansible.builtin.service:
         name: mongod
         state: started
+        enabled: yes
+
     - name: replacing the listener address
       ansible.builtin.replace:
         path: /etc/mongod.conf
         regexp: "127.0.0.1"
         replace: "0.0.0.0"
+
     - name: restart mongod service
       ansible.builtin.service:
         name: mongod
