@@ -1,0 +1,33 @@
+-name: mongodb installation
+ hosts: mongodb
+ become: yes
+ tasks:
+   - name: Importing the public key
+     ansible.builtin.apt_key:
+       url: https://www.mongodb.org/static/pgp/server-4.4.asc
+       state: present
+
+   - name: Creating a list file for MongoDB
+     ansible.builtin.copy:
+       dest: /etc/apt/sources.list.d/mongodb-org-4.4.list
+       content: deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse
+       mode: '0644'
+
+   - name: Updating the apt cache
+     ansible.builtin.apt:
+       update_cache: yes
+
+   - name: Installing MongoDB packages
+     ansible.builtin.apt:
+       name: mongodb-org
+       state: present
+
+   - name: Starting MongoDB service
+     ansible.builtin.service:
+       name: mongod
+       state: started
+   - name: replacing the listener address
+        ansible.builtin.replace:
+        path: /etc/mongod.conf
+        regexp: '127.0.0.1'
+        replace: '0.0.0.0'
