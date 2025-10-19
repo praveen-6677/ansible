@@ -36,6 +36,12 @@
         url: https://roboshop-builds.s3.amazonaws.com/catalogue.zip
         dest: /tmp
 
+    - name: Install unzip
+      ansible.builtin.apt:
+        name: unzip
+        state: present
+        update_cache: yes
+
     - name: Extract catalogue service code
       ansible.builtin.unarchive:
         src: /tmp/catalogue.zip
