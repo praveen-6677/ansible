@@ -71,38 +71,37 @@
         state: restarted
         enabled: yes
 
-    - name: Ensure gnupg and curl are installed
-      ansible.builtin.apt:
-        name:
-          - gnupg
-          - curl
-        state: present
-        update_cache: yes
+- name: Ensure gnupg and curl are installed
+  ansible.builtin.apt:
+    name:
+      - gnupg
+      - curl
+    state: present
+    update_cache: yes
 
-    - name: Add MongoDB GPG key
-      ansible.builtin.apt_key:
-        url: https://pgp.mongodb.com/server-7.0.asc
-        keyring: /usr/share/keyrings/mongodb-7.gpg
-        state: present
+- name: Remove any old MongoDB repo
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/mongodb-org-*.list
+    state: absent
 
-    - name: Add MongoDB repository
-      ansible.builtin.copy:
-        dest: /etc/apt/sources.list.d/mongodb-org-7.0.list
-        content: "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-7.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse"
-        mode: "0644"
+- name: Download and add MongoDB 7.0 GPG key
+  ansible.builtin.shell: |
+    curl -fsSL https://pgp.mongodb.com/server-7.0.asc | gpg --dearmor -o /usr/share/keyrings/mongodb-7.gpg
+  args:
+    creates: /usr/share/keyrings/mongodb-7.gpg
 
-    - name: Install MongoDB shell client
-      ansible.builtin.apt:
-        name: mongodb-org-shell
-        state: present
-        update_cache: yes
+- name: Install MongoDB shell client
+  ansible.builtin.apt:
+    name: mongodb-org-shell
+    state: present
+    update_cache: yes
 
-    - name: Get categories count
-      ansible.builtin.command: >
-        mongo --host {{ mongodb_host }} --quiet --eval 'db = db.getSiblingDB("catalogue"); db.products.count()'
-      register: product_count
+- name: Get categories count
+  ansible.builtin.command: >
+    mongo --host {{ mongodb_host }} --quiet --eval 'db = db.getSiblingDB("catalogue"); db.products.count()'
+  register: product_count
 
-    - name: Load catalogue data if empty
-      ansible.builtin.command: >
-        mongo --host {{ mongodb_host }} < /app/schema/catalogue.js
-      when: product_count.stdout == "0"
+- name: Load catalogue data if empty
+  ansible.builtin.command: >
+    mongo --host {{ mongodb_host }} < /app/schema/catalogue.js
+  when: product_count.stdout == "0"
