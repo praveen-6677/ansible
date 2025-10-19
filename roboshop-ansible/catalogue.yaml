@@ -4,12 +4,16 @@
 
   tasks:
     - name: Install NodeJS 18.x repo
-      ansible.builtin.shell: dnf module disable nodejs -y ; dnf module enable nodejs:18 -y
+      ansible.builtin.shell: |
+        curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+      args:
+        executable: /bin/bash
 
     - name: Install NodeJS
       ansible.builtin.apt:
         name: nodejs
         state: present
+        update_cache: yes
 
     - name: Create application user
       ansible.builtin.user:
@@ -29,7 +33,7 @@
 
     - name: Download catalogue service code
       ansible.builtin.get_url:
-        url: curl -o /tmp/catalogue.zip https://roboshop-builds.s3.amazonaws.com/catalogue.zip
+        url: https://roboshop-builds.s3.amazonaws.com/catalogue.zip
         dest: /tmp
 
     - name: Extract catalogue service code
@@ -62,10 +66,11 @@
         content: "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-7.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse"
         mode: "0644"
 
-    - name: Install MongoDB 7.0
+    - name: Install MongoDB shell client
       ansible.builtin.apt:
-        name: mongodb-org
+        name: mongodb-org-shell
         state: present
+        update_cache: yes
 
     - name: get the categories count
       ansible.builtin.command: mongo --host 172.31.17.131 --quiet --eval 'db = db.getSiblingDB("catalogue"); db.products.count()'
