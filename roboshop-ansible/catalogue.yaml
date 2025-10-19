@@ -57,6 +57,7 @@
       ansible.builtin.command: npm install
       args:
         chdir: /app
+        creates: /app/node_modules
 
     - name: Configure systemd file
       ansible.builtin.copy:
@@ -84,17 +85,17 @@
         path: /etc/apt/sources.list.d/mongodb-org-*.list
         state: absent
 
-    - name: Download and add MongoDB 7.0 GPG key
-      ansible.builtin.get_url:
-        url: https://www.mongodb.org/static/pgp/server-7.0.asc
-        dest: /usr/share/keyrings/mongodb-7.gpg
-        mode: "0644"
+    - name: Download MongoDB 7.0 GPG key and convert to gpg
+      ansible.builtin.shell: |
+        curl -fsSL https://pgp.mongodb.com/server-7.0.asc | gpg --dearmor -o /usr/share/keyrings/mongodb-7.gpg
+      args:
+        creates: /usr/share/keyrings/mongodb-7.gpg
 
     - name: Add MongoDB 7.0 repo
       ansible.builtin.apt_repository:
         repo: "deb [signed-by=/usr/share/keyrings/mongodb-7.gpg] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse"
         state: present
-        filename: mongodb-org
+        filename: mongodb-org-7
 
     - name: Update apt cache
       ansible.builtin.apt:
@@ -117,3 +118,4 @@
       when: product_count.stdout == "0"
       args:
         warn: false
+        when: product_count.stdout == "0"
