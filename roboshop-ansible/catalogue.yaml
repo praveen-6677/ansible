@@ -6,6 +6,7 @@
     mongodb_host: 172.31.17.131
 
   tasks:
+    # ---------------- NodeJS Setup ----------------
     - name: Install NodeJS 18.x repo
       ansible.builtin.shell: |
         curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
@@ -18,6 +19,7 @@
         state: present
         update_cache: yes
 
+    # ---------------- App User & Directory ----------------
     - name: Create application user
       ansible.builtin.user:
         name: roboshop
@@ -36,6 +38,7 @@
         owner: roboshop
         group: roboshop
 
+    # ---------------- App Code ----------------
     - name: Download catalogue service code
       ansible.builtin.get_url:
         url: https://roboshop-builds.s3.amazonaws.com/catalogue.zip
@@ -59,6 +62,7 @@
         chdir: /app
         creates: /app/node_modules
 
+    # ---------------- Systemd Service ----------------
     - name: Configure systemd file
       ansible.builtin.copy:
         src: catalogue.service
@@ -72,6 +76,7 @@
         state: restarted
         enabled: yes
 
+    # ---------------- MongoDB Setup ----------------
     - name: Ensure gnupg and curl are installed
       ansible.builtin.apt:
         name:
@@ -80,22 +85,22 @@
         state: present
         update_cache: yes
 
-    - name: Remove any old MongoDB repo
+    - name: Remove old MongoDB repo files
       ansible.builtin.file:
         path: /etc/apt/sources.list.d/mongodb-org-*.list
         state: absent
 
-    - name: Download MongoDB 7.0 GPG key and convert to gpg
+    - name: Download and dearmor MongoDB 7.0 GPG key
       ansible.builtin.shell: |
-        curl -fsSL https://pgp.mongodb.com/server-7.0.asc | gpg --dearmor -o /usr/share/keyrings/mongodb-7.gpg
+        curl -fsSL https://pgp.mongodb.com/server-7.0.asc | gpg --dearmor | tee /usr/share/keyrings/mongodb-7.gpg > /dev/null
       args:
         creates: /usr/share/keyrings/mongodb-7.gpg
 
-    - name: Add MongoDB 7.0 repo
-      ansible.builtin.apt_repository:
-        repo: "deb [signed-by=/usr/share/keyrings/mongodb-7.gpg] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse"
-        state: present
-        filename: mongodb-org-7
+    - name: Add MongoDB 7.0 repository
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/mongodb-org-7.0.list
+        content: |
+          deb [signed-by=/usr/share/keyrings/mongodb-7.gpg] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse
 
     - name: Update apt cache
       ansible.builtin.apt:
@@ -105,17 +110,16 @@
       ansible.builtin.apt:
         name: mongodb-org-shell
         state: present
-        update_cache: yes
 
+    # ---------------- Load Catalogue Data ----------------
     - name: Get categories count
       ansible.builtin.command: >
         mongo --host {{ mongodb_host }} --quiet --eval 'db = db.getSiblingDB("catalogue"); db.products.count()'
       register: product_count
 
     - name: Load catalogue data if empty
-      ansible.builtin.command: >
-        mongo --host {{ mongodb_host }} < /app/schema/catalogue.js
-      when: product_count.stdout == "0"
+      ansible.builtin.command: mongo --host {{ mongodb_host }} < schema/catalogue.js
       args:
+        chdir: /app
         warn: false
-        when: product_count.stdout == "0"
+      when: product_count.stdout == "0"
