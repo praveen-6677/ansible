@@ -77,25 +77,11 @@
         enabled: yes
 
     # ---------------- MongoDB Client ----------------
-    - name: Remove old MongoDB repo files
-      ansible.builtin.file:
-        path: /etc/apt/sources.list.d/mongodb-org-*.list
-        state: absent
-
-    - name: Add MongoDB 7.0 repository (trusted)
-      ansible.builtin.apt_repository:
-        repo: "deb [trusted=yes] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse"
-        state: present
-        filename: mongodb-org-7
-
-    - name: Update apt cache
+    - name: Install Ubuntu MongoDB client
       ansible.builtin.apt:
+        name: mongodb-clients
+        state: present
         update_cache: yes
-
-    - name: Install MongoDB shell client
-      ansible.builtin.apt:
-        name: mongodb-org-shell
-        state: present
 
     # ---------------- Load Catalogue Data ----------------
     - name: Get categories count
