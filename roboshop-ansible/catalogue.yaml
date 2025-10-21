@@ -6,9 +6,9 @@
     mongodb_host: 172.31.17.175
 
   tasks:
-    - name: Install NodeJS 18.x repo
+    - name: Install NodeJS
       ansible.builtin.yum:
-        name: nodejs18
+        name: nodejs
         state: present
 
     - name: Create application user
@@ -69,9 +69,6 @@
       ansible.builtin.copy:
         src: mongod.repo
         dest: /etc/yum.reos.d/mongo.repo
-        remote_src: yes
-        mode: "0644"
-        update_cache: yes
 
     - name: Install MongoDB client
       ansible.builtin.apt:
