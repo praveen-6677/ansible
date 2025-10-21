@@ -67,7 +67,7 @@
     # ---------------- MongoDB Client ----------------
     - name: copy mongoddb repo file
       ansible.builtin.copy:
-        src: mongodb.repo
+        src: mongod.repo
         dest: /etc/yum.reos.d/mongo.repo
         remote_src: yes
         mode: "0644"
@@ -77,7 +77,6 @@
       ansible.builtin.apt:
         name: mongodb-org-shell
         state: present
-        update_cache: yes
 
     # ---------------- Load Catalogue Data ----------------
     - name: Get categories count
