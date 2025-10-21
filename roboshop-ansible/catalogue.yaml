@@ -6,20 +6,11 @@
     mongodb_host: 172.31.17.175
 
   tasks:
-    # ---------------- NodeJS Setup ----------------
     - name: Install NodeJS 18.x repo
-      ansible.builtin.shell: |
-        curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-      args:
-        executable: /bin/bash
-
-    - name: Install NodeJS
-      ansible.builtin.apt:
-        name: nodejs
+      ansible.builtin.yum:
+        name: nodejs18
         state: present
-        update_cache: yes
 
-    # ---------------- App User & Directory ----------------
     - name: Create application user
       ansible.builtin.user:
         name: roboshop
@@ -35,20 +26,17 @@
       ansible.builtin.file:
         path: /app
         state: directory
-        owner: roboshop
-        group: roboshop
 
-    # ---------------- App Code ----------------
     - name: Download catalogue service code
       ansible.builtin.get_url:
         url: https://roboshop-builds.s3.amazonaws.com/catalogue.zip
         dest: /tmp/catalogue.zip
 
-    - name: Install unzip
-      ansible.builtin.apt:
-        name: unzip
-        state: present
-        update_cache: yes
+    # - name: Install unzip
+    #   ansible.builtin.apt:
+    #     name: unzip
+    #     state: present
+    #     update_cache: yes
 
     - name: Extract catalogue service code
       ansible.builtin.unarchive:
