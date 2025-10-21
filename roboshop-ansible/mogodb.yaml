@@ -7,11 +7,11 @@
       ansible.builtin.copy:
         src: mongod.repo
         dest: /etc/yum.repos.d/mongod.repo
-        remote_src: yes
 
     - name: install mongo mongodb-org
-      ansible.builtin.shell:
-        cmd: dnf install mongodb-org
+      ansible.builtin.yum:
+        name: mongodb-org
+        state: present
 
     - name: Update apt cache
       ansible.builtin.apt:
