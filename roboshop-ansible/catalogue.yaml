@@ -3,7 +3,7 @@
   become: yes
 
   vars:
-    mongodb_host: 172.31.18.142
+    mongodb_host: 172.31.17.175
 
   tasks:
     # ---------------- NodeJS Setup ----------------
@@ -77,9 +77,17 @@
         enabled: yes
 
     # ---------------- MongoDB Client ----------------
-    - name: Install Ubuntu MongoDB client
+    - name: copy mongoddb repo file
+      ansible.builtin.copy:
+        src: mongodb.repo
+        dest: /etc/yum.reos.d/mongo.repo
+        remote_src: yes
+        mode: "0644"
+        update_cache: yes
+
+    - name: Install MongoDB client
       ansible.builtin.apt:
-        name: mongodb-clients
+        name: mongodb-org-shell
         state: present
         update_cache: yes
 
