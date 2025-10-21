@@ -13,9 +13,7 @@
         name: mongodb-org
         state: present
 
-    - name: Update apt cache
-      ansible.builtin.apt:
-        update_cache: yes
+    -
 
     - name: Enable and start mongod service
       ansible.builtin.service:
