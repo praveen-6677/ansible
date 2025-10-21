@@ -5,7 +5,7 @@
   tasks:
     - name: adding mongodb repo
       ansible.builtin.copy:
-        src: mongodb.repo
+        src: mongod.repo
         dest: /etc/yum.repos.d/mongod.repo
         remote_src: yes
 
