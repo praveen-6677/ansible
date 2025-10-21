@@ -1,0 +1,25 @@
+- name: setup of redis
+  hosts: redis
+  become: yes
+
+  tasks:
+    - name: Installing repo file for redis
+      ansible.builtin.get_url:
+        url: "https://rpms.remirepo.net/enterprise/remi-release-8.rpm"
+        dest: /tmp/remi-release-8.rpm
+
+    - name: enable redis module
+      yum:
+        name: redis-remi-6.2
+        state: present
+
+    - name: install redis
+      yum:
+        name: redis
+        state: present
+
+    - name: update redis listen address
+      ansible.builtin.replace:
+        path: /etc/redis.conf
+        regexp: 127.0.0.0
+        replace: 0.0.0.0

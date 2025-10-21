@@ -1,0 +1,75 @@
+- name: configuring user
+  hosts: user
+  become: yes
+
+  vars:
+    mongodb_host: 172.31.16.246 #replace with ur mongod db server ip
+
+  tasks:
+    - name: install nodejs
+      yum:
+        name: nodejs
+        state: present
+
+    - name: add user for user component
+      ansible.builtin.user:
+        name: roboshop
+
+    - name: creating directory for user component
+      ansible.builtin.file:
+        path: /app
+        state: directory
+
+    - name: download user component
+      ansible.builtin.get_url:
+        url: "https://roboshop-builds.s3.amazonaws.com/user.zip"
+        dest: /tmp
+
+    - name: unzipping user component
+      ansible.builtin.unarchive:
+        src: /tmp/user.zip
+        dest: /app
+        remote_src: yes
+
+    - name: dowwnloading dependies
+      ansible.builtin.yum:
+        name: npm
+        state: present
+        args:
+          chdir: /app
+
+    - name: adding user.service file
+      ansible.builtin.copy:
+        src: user.service
+        dest: /etc/systemd/system/user.service
+
+    - name: loading enabling and starting user service and reloading daemon
+      ansible.builtin.systemd:
+        name: user
+        daemon_reload: yes
+        enabled: yes
+        state: started
+
+    - name: copying mongo repo file
+      ansible.builtin.copy:
+        src: mongo.repo
+        dest: /etc/yum.repos.d/mongo.repo
+
+    - name: installing mongodb client
+      ansible.builtin.yum:
+        name: mongodb-org
+        state: present
+
+    - name: get the users count
+      ansible.builtin.command: mongosh --host {{mongodb_host}} --quiet --eval 'db = db.getSiblingDB("users"); db.users.count()'
+      register: user_count
+
+    - name: load user data
+      ansible.builtin.command: mongosh --host {{mongodb_host}} < /app/schema/user.js
+      when: user_count.stdout == "0" # keep double quotes
+
+    - name: start and enable user
+      ansible.builtin.service:
+        name: user
+        state: restarted
+        enabled: yes

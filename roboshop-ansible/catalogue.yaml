@@ -77,13 +77,15 @@
 
     # ---------------- Load Catalogue Data ----------------
     - name: Get categories count
-      ansible.builtin.command: >
-        mongo --host {{ mongodb_host }} --quiet --eval 'db = db.getSiblingDB("catalogue"); db.products.count()'
+      ansible.builtin.command: 
+        mongosh --host {{ mongodb_host }} --quiet --eval 'db = db.getSiblingDB("catalogue"); db.products.count()'
       register: product_count
 
     - name: Load catalogue data if empty
-      ansible.builtin.command: mongo --host {{ mongodb_host }} < schema/catalogue.js
+      ansible.builtin.command: mongosh --host {{ mongodb_host }} < schema/catalogue.js
       args:
         chdir: /app
         warn: false
       when: product_count.stdout == "0"
+   
+   "
