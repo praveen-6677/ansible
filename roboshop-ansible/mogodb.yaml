@@ -3,31 +3,19 @@
   become: yes
 
   tasks:
-    - name: Remove any old MongoDB repo
-      ansible.builtin.file:
-        path: /etc/apt/sources.list.d/mongodb-org-*.list
-        state: absent
-
-    - name: Download and add MongoDB 7.0 GPG key
-      ansible.builtin.shell: |
-        curl -fsSL https://pgp.mongodb.com/server-7.0.asc | gpg --dearmor -o /usr/share/keyrings/mongodb-7.gpg
-      args:
-        creates: /usr/share/keyrings/mongodb-7.gpg
-
-    - name: Add MongoDB 7.0 repository (for Ubuntu Jammy)
+    - name: adding mongodb repo
       ansible.builtin.copy:
-        dest: /etc/apt/sources.list.d/mongodb-org-7.0.list
-        content: "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-7.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse"
-        mode: "0644"
+        src: mongodb.repo
+        dest: /etc/yum.repos.d/mongo.repo
+        remote_src: yes
+
+    - name: install mongo mongodb-org
+      ansible.builtin.shell:
+        cmd: dnf install mongodb-org
 
     - name: Update apt cache
       ansible.builtin.apt:
         update_cache: yes
-
-    - name: Install MongoDB 7.0
-      ansible.builtin.apt:
-        name: mongodb-org
-        state: present
 
     - name: Enable and start mongod service
       ansible.builtin.service:
