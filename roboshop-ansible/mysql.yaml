@@ -1,0 +1,32 @@
+- name: mysql setup
+  hosts: mysql
+  become: true
+
+  vars:
+    mysql_root_password: "Roboshop@123"
+
+  tasks:
+    - name: copying mysql repo file
+      ansible.builtin.copy:
+        src: mysql.repo
+        dest: /etc/yum.repos.d/mysql.repo
+
+    - name: installing mysql server
+      ansible.builtin.yum:
+        name: mysql-community-server
+        state: present
+
+    - name: starting and enabling mysql service
+      ansible.builtin.systemd:
+        name: mysqld
+        enabled: yes
+        state: started
+
+    - name: setting mysql root password
+      ansible.builtin.command: >
+        mysql -uroot -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{mysql_root_password}}';"
+      args:
+        creates: /tmp/mysql_root_password_set
+
+    - name: creating a file to indicate mysql root password is set
+      ansible.builtin.file:
