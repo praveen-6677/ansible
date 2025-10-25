@@ -22,11 +22,8 @@
         enabled: yes
         state: started
 
-    - name: setting mysql root password
-      ansible.builtin.command: >
-        mysql --user=root --skip-password -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ mysql_root_password }}';"
-      args:
-        creates: /tmp/mysql_root_password_set
-
-    - name: creating a file to indicate mysql root password is set
-      ansible.builtin.file:
+    - name: set MySQL root password (for MySQL 8+)
+      ansible.builtin.shell: |
+        sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ mysql_root_password }}';"
+        args:
+         creates: /tmp/mysql_root_password_set
