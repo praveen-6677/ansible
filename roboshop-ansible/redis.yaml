@@ -3,21 +3,10 @@
   become: yes
 
   tasks:
-    - name: Ensure EPEL and Remi repositories are installed
-      ansible.builtin.yum:
-        name:
-          - epel-release
-          - https://rpms.remirepo.net/enterprise/remi-release-8.rpm
-        state: present
-
-    - name: Reset existing Redis module (if any)
-      ansible.builtin.shell: dnf module reset redis -y
-      ignore_errors: yes
-
-    - name: Enable Redis 6.2 stream
-      ansible.builtin.shell: dnf module enable redis:remi-6.2 -y
-      register: redis_enable
-      changed_when: "'enabled' in redis_enable.stdout or 'Enabling module' in redis_enable.stdout"
+    - name: Enable redis6 extras repository
+      ansible.builtin.shell: amazon-linux-extras enable redis6 -y
+      args:
+        creates: /etc/yum.repos.d/amzn2-extras.repo
 
     - name: Install Redis
       ansible.builtin.yum:
