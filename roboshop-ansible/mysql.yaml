@@ -22,5 +22,13 @@
         enabled: yes
         state: started
 
-    - name: Set MySQL root password (idempotent)
-      ansible.builtin.command: mysql_secure_installation --set-root-pass RoboShop@123
+    - name: Check if MySQL root password is already set
+      ansible.builtin.command: >
+        mysql -uroot -p{{ mysql_root_password }} -e "SELECT 1;"
+      register: mysql_root_check
+      ignore_errors: yes
+
+    - name: Set MySQL root password (first time only)
+      ansible.builtin.command: >
+        mysql -uroot -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ mysql_root_password }}';"
+      when: mysql_root_check.rc != 0
