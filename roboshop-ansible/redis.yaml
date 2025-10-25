@@ -3,23 +3,35 @@
   become: yes
 
   tasks:
-    - name: Installing repo file for redis
-      ansible.builtin.get_url:
-        url: "https://rpms.remirepo.net/enterprise/remi-release-8.rpm"
-        dest: /tmp/remi-release-8.rpm
-
-    - name: enable redis module
-      yum:
-        name: redis-remi
+    - name: Ensure EPEL and Remi repositories are installed
+      ansible.builtin.yum:
+        name:
+          - epel-release
+          - https://rpms.remirepo.net/enterprise/remi-release-8.rpm
         state: present
 
-    - name: install redis
-      yum:
+    - name: Reset existing Redis module (if any)
+      ansible.builtin.shell: dnf module reset redis -y
+      ignore_errors: yes
+
+    - name: Enable Redis 6.2 stream
+      ansible.builtin.shell: dnf module enable redis:remi-6.2 -y
+      register: redis_enable
+      changed_when: "'enabled' in redis_enable.stdout or 'Enabling module' in redis_enable.stdout"
+
+    - name: Install Redis
+      ansible.builtin.yum:
         name: redis
         state: present
 
-    - name: update redis listen address
+    - name: Update redis listen address
       ansible.builtin.replace:
         path: /etc/redis.conf
-        regexp: 127.0.0.0
-        replace: 0.0.0.0
+        regexp: '^bind\s+127\.0\.0\.1'
+        replace: "bind 0.0.0.0"
+
+    - name: Enable and start redis service
+      ansible.builtin.systemd:
+        name: redis
+        state: started
+        enabled: yes
