@@ -32,11 +32,9 @@
         remote_src: yes
 
     - name: dowwnloading dependies
-      ansible.builtin.yum:
-        name: npm
-        state: present
-        args:
-          chdir: /app
+      ansible.builtin.command:
+        cmd: npm install
+        chdir: /app
 
     - name: adding user.service file
       ansible.builtin.copy:
