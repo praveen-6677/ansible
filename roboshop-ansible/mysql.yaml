@@ -24,7 +24,7 @@
 
     - name: setting mysql root password
       ansible.builtin.command: >
-        mysql -uroot -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{mysql_root_password}}';"
+        mysql --user=root --skip-password -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ mysql_root_password }}';"
       args:
         creates: /tmp/mysql_root_password_set
 
