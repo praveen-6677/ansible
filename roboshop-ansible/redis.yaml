@@ -3,21 +3,22 @@
   become: yes
 
   tasks:
-    - name: Enable redis6 extras repository
-      ansible.builtin.shell: amazon-linux-extras enable redis6 -y
-      args:
-        creates: /etc/yum.repos.d/amzn2-extras.repo
-
     - name: Install Redis
-      ansible.builtin.yum:
+      ansible.builtin.dnf:
         name: redis
         state: present
 
     - name: Update redis listen address
       ansible.builtin.replace:
-        path: /etc/redis.conf
+        path: /etc/redis/redis.conf
         regexp: '^bind\s+127\.0\.0\.1'
         replace: "bind 0.0.0.0"
+
+    - name: Disable protected mode
+      ansible.builtin.replace:
+        path: /etc/redis/redis.conf
+        regexp: '^protected-mode\s+yes'
+        replace: "protected-mode no"
 
     - name: Enable and start redis service
       ansible.builtin.systemd:
