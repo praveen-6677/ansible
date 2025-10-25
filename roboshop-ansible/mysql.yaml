@@ -23,7 +23,9 @@
         state: started
 
     - name: Set MySQL root password (idempotent)
-      ansible.builtin.shell: |
+      ansible.builtin.shell: >
         mysql -uroot -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ mysql_root_password }}';"
+      become: yes
+      become_user: root
       args:
-        creates: /tmp/mysql_root_password_set
+      creates: /tmp/mysql_root_password_set
