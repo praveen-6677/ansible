@@ -28,4 +28,4 @@
       become: yes
       become_user: root
       args:
-      creates: /tmp/mysql_root_password_set
+        creates: /tmp/mysql_root_password_set
