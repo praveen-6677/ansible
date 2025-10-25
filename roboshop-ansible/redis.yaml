@@ -10,7 +10,7 @@
 
     - name: enable redis module
       yum:
-        name: redis-remi-6.2
+        name: redis-remi
         state: present
 
     - name: install redis
