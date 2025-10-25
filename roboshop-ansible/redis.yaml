@@ -5,8 +5,6 @@
   tasks:
     - name: Enable redis module
       ansible.builtin.shell: dnf module enable redis -y
-      args:
-        warn: false
 
     - name: Install Redis
       ansible.builtin.dnf:
