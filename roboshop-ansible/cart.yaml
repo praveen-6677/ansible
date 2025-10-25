@@ -29,8 +29,6 @@
         src: /tmp/cart.zip
         dest: /app
         remote_src: true
-      args:
-        chdir: /app
 
     - name: install npm dependencies
       ansible.builtin.command: npm install
