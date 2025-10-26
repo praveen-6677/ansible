@@ -91,4 +91,4 @@
       args:
         chdir: /app
         warn: false
-      when: product_count.stdout|int == "0"
+      when: product_count.stdout|int == 0
