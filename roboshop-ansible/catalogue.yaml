@@ -90,5 +90,4 @@
       ansible.builtin.shell: mongosh --host {{ mongodb_host }} < schema/catalogue.js
       args:
         chdir: /app
-        warn: false
       when: product_count.stdout|int == 0
